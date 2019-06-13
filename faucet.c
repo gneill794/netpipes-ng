@@ -151,18 +151,6 @@ int	reuseaddr;
   return(sock);
 }
 
-
-void waitonchild()
-
-{
-  int	status;
-
-  int	childpid;
-  
-  childpid = wait(&status);
-}
-
-
 int
 authorize_address(sin)
      struct sockaddr	*sin;
@@ -503,9 +491,6 @@ char ** argv;
   }
 #endif
   
-  if (!serialize)
-      signal(SIGCHLD,waitonchild);
-
   reserve_fds(0);
 
   mastersocket = setup_socket(argv[1], backlog, reuseaddr);
@@ -515,6 +500,8 @@ char ** argv;
   signal(SIGPIPE, nice_shutdown);
   signal(SIGALRM, nice_shutdown);
   signal(SIGTERM, nice_shutdown);
+
+  signal(SIGCHLD, SIG_IGN); /* Silently (and portably) reap children. */
   
   if (foreignhost != NULL &&
       0==(foreignHOST = convert_hostname(foreignhost, &foreignCOUNT))) {
@@ -599,7 +586,7 @@ char ** argv;
   while (running) {
 
     {
-      int	length;
+      socklen_t	length;
     
       length = sizeof(saddr);
     
@@ -673,7 +660,7 @@ char ** argv;
       execvp(cmd[0], cmd);
       s ="exec failed\n";
       write(duped_stderr,s,strlen(s));
-      exit(0);
+      exit(1);
     } else {
       /* parent: close socket.
 	 Signal will arrive upon death of child. */

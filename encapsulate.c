@@ -185,10 +185,10 @@ static int Im_server_p(sock_fd)
     int	len, i;
 
     len = sizeof(me);
-    getsockname(sock_fd, (struct sockaddr*)&me, &len);
+    getsockname(sock_fd, (struct sockaddr*)&me, (socklen_t*)&len);
 
     len = sizeof(him);
-    getpeername(sock_fd, (struct sockaddr*)&him, &len);
+    getpeername(sock_fd, (struct sockaddr*)&him, (socklen_t*)&len);
 
     i = memcmp(&me.sin_addr, &him.sin_addr, 4);
     if (i<0)
@@ -1519,7 +1519,7 @@ int main (argc,argv)
 		       0==strcmp(arg, "duplex") ||
 		       0==strcmp(arg, "Duplex") ||
 		       0==strcmp(arg, "DUPLEX")) {
-		long	fd, sid;
+		long	fd;
 		char	*p;
 		int	err = 0;
 		enum pipe_polarity	pol = -1;
@@ -1529,9 +1529,8 @@ int main (argc,argv)
 		} else {
 		    fd = strtol(argv[1], &p, 0);
 		    if (*p==0) {
-			sid = -1;
 		    } else if (p[0] == '=' && p[1] != 0) {
-			sid = strtol(p+1, &p, 0);
+			strtol(p+1, &p, 0);
 			if (*p != 0) {
 			    err = 1;
 			}

@@ -146,10 +146,14 @@ int	reuseaddr;
 
 #ifdef DOUNIX
   if (doflags&DOUNIX)
+  {
     family = AF_UNIX;
+  }
   else
 #endif
+  {
     family = AF_INET;
+  }
 
     /* multi-homed hosts are a little tricky */
     for ( j=0; j<num_addresses; j++) {

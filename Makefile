@@ -86,7 +86,7 @@ CFLAGS = -DUSE_IOCTL -DPOSIX_SIG -DHAVE_INET_ATON $(CDEBUGFLAGS)
 
 # gcc can handle both -O and -g at once
 #CDEBUGFLAGS = -g # -Wall -DDEBUG
-CDEBUGFLAGS = -O
+CDEBUGFLAGS = -O -Wall -Wno-unused-result -Wno-unused-variable
 
 ######################################################################
 
@@ -153,7 +153,7 @@ install : all
 clean	:
 	rm -f ${FOBJS} ${HOBJS} ${SOBJS} ${GOBJS} ${TOBJS} ${EOBJS} ${SSLOBJS}
 
-spotless: clean
+distclean: clean
 	rm -f *~ core ${PROGRAMS}
 
 #

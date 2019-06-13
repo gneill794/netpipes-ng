@@ -29,6 +29,7 @@ static char info[] = "timelimit: a  utility for sockets\nWritten 1996 by Robert 
 #include <sys/wait.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 extern int errno;
 #include "common.h"
