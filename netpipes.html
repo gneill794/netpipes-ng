@@ -46,25 +46,6 @@ netpipes &ndash; a package to manipulate BSD TCP/IP stream sockets
 [<b>-h</b> <i>local-host</i>]
 <i>command</i> <i>args</i>
 
-<p> <b>encapsulate</b>
-<b>--fd</b> <i>n</i> 
-[ <b>--verbose</b> ]
-[ <b>--subproc</b> 
-[ <b>--infd</b> <i>n</i>[<b>=</b><i>sid</i>] ]
-[ <b>--outfd</b> <i>n</i>[<b>=</b><i>sid</i>] ]
-[ <b>--duplex</b> <i>n</i>[<b>=</b><i>sid</i>] ]
-[ <b>--Duplex</b> <i>n</i>[<b>=</b><i>sid</i>] ]
-[ <b>--DUPLEX</b> <i>n</i>[<b>=</b><i>sid</i>] ]
-[ <b>--prefer-local</b> ]
-[ <b>--prefer-remote</b> ]
-[ <b>--local-only</b> ]
-[ <b>--remote-only</b> ]
-]
-[ <b>--client</b> ]
-[ <b>--server</b> ]
-<b>-</b>[<b>#</b><i>n</i>][<b>v</b>][<b>s</b>[<b>i</b><i>n</i>][<b>o</b><i>n</i>][<b>d</b><i>n</i>][<b>io</b><i>n</i>][<b>oi</b><i>n</i>][<b>l</b>][<b>r</b>][<b>L</b>][<b>R</b>]]
-<i>command args ...</i>
-
 <p>
 <b>ssl-auth</b> <b>--fd</b> <i>n</i> ( <b>--server</b> | <b>--client</b> )
 [ <b>--cert</b> <i>file</i> ]
@@ -118,10 +99,6 @@ connecting client.
 <p>   <b>hose</b> is the client end of a TCP/IP stream.  It actively
 connects to a remote port and execs a process to request a service.
 
-<p>   <b>encapsulate</b> is an implementation of the Session Control
-Protocol.  It allows you to multiplex several streams across a single
-TCP session and also transmits remote exit status.
-
 <p> <b>ssl-auth</b> is an encryption filter that encapsulates
 stdin/stdout from a subprocess (or its own stdin/stdout) in the Secure
 Socket Layer protocol as implemented by the <a
@@ -164,41 +141,6 @@ cairo$ hose www.cis.ufl.edu 80 --in --out \
 cairo$ hose metaserver.ecst.csuchico.edu 3521 --in cat
 </pre>
 
-
-<p> Allow me to apologize ahead of time for the convolutedness of the
-following example.  It requires an understanding of Bourne shell file
-descriptor redirection syntax (and illustrates why csh and tcsh suck
-eggs).  Do not try to type this from your tcsh command line.  Get a
-bash (GNU's Bourne Again SHell).
-
-<p> Suppose you want to distinguish between stdout and stderr of a remote process
-<pre>
-remote$ faucet 3000 --fd 3 \
-   encapsulate --fd 3 --infd 0 --outfd 1 --outfd 2 --subproc \
-	remote-app
-local$ hose remote 3000 --fd 3 \
-   encapsulate --fd 3 --outfd 3 --infd 4 --infd 5 --subproc \
-	sh -c "cat 0&lt;&amp;4 3&gt;&amp;- &amp; cat 0&lt;&amp;5 1&gt;&amp;2 3&gt;&amp;- &amp; \
-	    cat 1&gt;&amp;3 ; exec 3&gt;&amp;-"
-</pre>
-Close all unneeded file descriptors when you spawn a background task.
-That's why the backgrounded cats have 3&gt;&amp;-.
-
-<pre>
-server$ faucet 3000 --in --out --verbose enscript -2rGhp -
-client$ ps aux | hose server 3000 --in --out \
-	sh -c " (cat &lt;&amp;3; sockdown ) &amp; cat &gt;&amp;4 " 3&lt;&amp;0 4&gt;&amp;1 | \
-	lpr -Pps422
-#or perhaps this, but I haven't tested it
-client$ ps aux | hose server 3000 --fd 3 \
-	sh -c " (cat &gt;&amp;3; sockdown 3 ) &amp; cat &lt;&amp;3 " | \
-	lpr -Pps422
-</pre>
-This proves that hose <i>can</i> be used as part of a pipeline to
-perform a sort of remote procedure call (RPC).  After you have figured
-out that example, you will know how to use Bourne shell to shuffle
-file descriptors around.  It is a handy skill.
-
 <p> Now we go to the extreme, but simplify things by using the
 <i>--slave</i> option of hose.  The following is a socket relay
 <pre>
@@ -210,33 +152,9 @@ on an occasional basis.  If you experience ``hanging'' of the
 connection, try using the <i>--netslave</i> option instead of
 <i>--slave</i>. (telnet proxies would benefit from this)
 
-<p> For those of you who use ssh, here's how to tunnel some information
-through an encrypted SSH port forward.
-
-<p> <pre>
-server$ faucet 3000 -1v --fd 1 --foreignhost server echo blah 
-client$ ssh -n -x -L 3000:server:3000 server sleep 60 &amp;
-client$ hose localhost 3000 --fd 0 -retry 10 cat
-</pre>
-
-<p>   The trick with ssh's port forwarding, is that the shutdown(2) system
-call causes ssh to close both halves of the full&ndash;duplex connection
-instead of only one half.  That's why you have to use --fd 1 and --fd
-0.  If you need to be able to close half of the connection while still
-using the other, use the encapsulate wrapper.
-
-<p> <pre>
-server$ faucet 3000 -1v --fd 3 --foreignhost server \
-	encapsulate --fd 3 --server -si0o1 tr a-z A-Z
-client$ ssh -n -x -L 3000:server:3000 server sleep 60 &amp;
-client$ echo blah | hose localhost 3000 --fd 3 -retry 10 \
-	encapsulate --fd 3 --client
-</pre>
-
 <h1> SEE ALSO</h1>
 <a href="faucet.html">faucet</a>&nbsp;(1),
 <a href="hose.html">hose</a>&nbsp;(1),
-<a href="encapsulate.html">encapsulate</a>&nbsp;(1),
 <a href="sockdown.html">sockdown</a>&nbsp;(1),
 <a href="getpeername.html">getpeername</a>&nbsp;(1),
 <a href="timelimit.html">timelimit</a>&nbsp;(1),

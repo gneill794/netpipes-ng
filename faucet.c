@@ -501,7 +501,11 @@ char ** argv;
   signal(SIGALRM, nice_shutdown);
   signal(SIGTERM, nice_shutdown);
 
-  signal(SIGCHLD, SIG_IGN); /* Silently (and portably) reap children. */
+  /* POSIX.1-1990 disallowed setting the action for SIGCHLD to SIG_IGN.  POSIX.1-2001 and later  allow  this  possibility,  so
+     that ignoring SIGCHLD can be used to prevent the creation of zombies (see wait(2)).  Nevertheless, the historical BSD and
+     System V behaviors for ignoring SIGCHLD differ, so the only completely portable method of ensuring terminated children
+     do not become zombies is to catch the SIGCHLD signal and perform a wait(2) or similar.  */
+  signal(SIGCHLD, SIG_IGN);
   
   if (foreignhost != NULL &&
       0==(foreignHOST = convert_hostname(foreignhost, &foreignCOUNT))) {

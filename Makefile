@@ -95,7 +95,7 @@ HOBJS = hose.o common.o version.o memmove.o
 SOBJS = sockdown.o version.o
 GOBJS = getpeername.o version.o
 TOBJS = timelimit.o version.o
-EOBJS = encapsulate.o common.o version.o memmove.o
+EOBJS = common.o version.o memmove.o
 SSLOBJS = ssl-auth.o ssl-criteria.o common.o version.o memmove.o
 
 SSLDIR = /usr/local/ssl
@@ -104,9 +104,9 @@ SSLINC = -I${SSLDIR}/include
 SSLLIB = -L../SSLeay-0.8.1 -lssl -lcrypto
 
 MANPAGES = netpipes.1 faucet.1 hose.1 \
-	sockdown.1 getpeername.1 timelimit.1 encapsulate.1 \
+	sockdown.1 getpeername.1 timelimit.1 \
 	ssl-auth.1
-PROGRAMS = faucet hose sockdown getpeername timelimit encapsulate
+PROGRAMS = faucet hose sockdown getpeername timelimit
 
 all	: ${PROGRAMS}
 
@@ -124,9 +124,6 @@ getpeername: ${GOBJS}
 
 timelimit: ${TOBJS}
 	${CC} ${CFLAGS} -o $@ ${TOBJS} ${LDLIBS}
-
-encapsulate: ${EOBJS}
-	${CC} ${CFLAGS} -o $@ ${EOBJS} ${LDLIBS}
 
 ssl-auth: ${SSLOBJS}
 	${CC} ${CFLAGS} -o $@ ${SSLOBJS} ${LDLIBS} ${SSLLIB}
@@ -158,9 +155,9 @@ distclean: clean
 
 #
 
-common.o encapsulate.o faucet.o getpeername.o hose.o sockdown.o \
+common.o faucet.o getpeername.o hose.o sockdown.o \
 	ssl-auth.o ssl-criteria.o timelimit.o: common.h
-encapsulate.o hose.o ssl-auth.o: memmove.h
+hose.o ssl-auth.o: memmove.h
 ssl-auth.o ssl-critera.o: ssl-criteria.h
 
 #
